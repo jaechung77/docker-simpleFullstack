@@ -1,0 +1,77 @@
+services:
+  frontend:
+    build: ./frontend
+    container_name: myworld-docker-frontend
+    restart: unless-stopped
+    # ports:
+    #   - "3000:3000"
+    command: serve -s build -l 3000
+    # networks:
+    #   - myworld-docker-network
+  
+  api:
+    build: ./api
+    container_name: myworld-docker-api
+    command: npm run start
+    restart: unless-stopped # it starts automatically when it is stopped unless admin explicitly stop it
+    # ports: 
+    #   - "3001:3001" #port number to access from outside : port number of container, app.listen(3000, fn) in index file
+    environment:
+      - PORT=3001  # this will be process.env.PORT  
+      - HOST=http://myworld-docker.com   # this will be process.env.HOST 
+      - MONGO_URL=mongodb://api_db:27017/api
+      - AUTH_API_URL=http://auth:3002/api
+    depends_on:   # this starts first
+      - api_db  
+    # networks:
+    #   - myworld-docker-network
+  
+  auth:
+    build: ./auth
+    container_name: myworld-docker-auth
+    command: npm run start
+    restart: unless-stopped
+    # ports:
+    #   - "3002:3002"
+    environment:
+      - PORT=3002
+      - HOST=http://myworld-docker.com  
+      - MONGO_URL=mongodb://auth_db:27017/auth
+    depends_on:   # this starts first
+      - auth_db
+    # networks:
+    #   - myworld-docker-network    
+
+  nginx:
+    image: nginx:stable-alpine
+    container_name: myworld-docker-nginx  
+    ports: 
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf.prod:/etc/nginx/conf.d/nginx.conf  
+    depends_on: 
+      - frontend
+
+  api_db:               # go to docker hub and search mongo
+    image: mongo:latest # No need to build, just use image coz we gonna use it as is
+    container_name: myworld-docker-api-db
+    volumes:
+      - mongodb_api:/data/db
+    # networks:
+    #   - myworld-docker-network  
+
+  auth_db:
+    image: mongo:latest
+    container_name: myworld-docker-auth-db
+    volumes:
+      - mongodb_auth:/data/db
+    # networks:
+    #   - myworld-docker-network    
+
+volumes:
+  mongodb_api:
+  mongodb_auth:
+
+# networks:
+#   myworld-docker-network:
+#     driver: bridge  

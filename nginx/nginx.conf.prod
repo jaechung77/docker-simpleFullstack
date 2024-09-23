@@ -1,0 +1,10 @@
+server {
+  listen 80;
+
+  server_name myworld-docker.com;
+
+  location / {
+    proxy_pass http://frontend:3000;
+  }
+
+}

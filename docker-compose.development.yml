@@ -1,0 +1,16 @@
+version: '3'
+
+services:
+  frontend:
+    command: npm run start
+    # ports:
+    #   - "3000:3000"
+    stdin_open: true    # interactive 
+    tty: true
+    volumes:
+      - ./frontend/src:/usr/src/app/src  # mount volume in our src folder
+
+  api:
+    command: npm run dev
+    volumes:
+      - ./api/src:/usr/src/app/src  # mount volume in our src folder
